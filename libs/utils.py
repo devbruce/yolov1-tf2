@@ -36,10 +36,3 @@ def postprocess_yolo_format(yolo_pred_boxes, cfg):
                 
                 ret[y_grid_idx, x_grid_idx, i] = np.array([x_min, y_min, x_max, y_max, confidence], dtype=np.float32)
     return tf.convert_to_tensor(ret, dtype=tf.float32)
-
-
-def trim_img_zero_pad(arr):
-    non_zero_idx_ranges =  map(lambda e: range(e.min(), e.max()+1), np.where(arr != 0))
-    mesh = np.ix_(*non_zero_idx_ranges)
-    return arr[mesh]
-    
