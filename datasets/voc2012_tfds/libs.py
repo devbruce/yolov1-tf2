@@ -3,7 +3,7 @@ import numpy as np
 import tensorflow as tf
 
 
-__all__ = ['VOC_CLS_MAP', 'normalize_img', 'trim_img_zero_pad', 'prep_voc_data', 'viz_voc_prep']
+__all__ = ['VOC_CLS_MAP', 'normalize_img', 'trim_img_zero_pad', 'prep_voc_data']
 
 
 VOC_CLS_MAP = {
@@ -78,20 +78,3 @@ def prep_voc_data(batch_data, input_height, input_width):
         
     batch_imgs = tf.convert_to_tensor(batch_imgs, dtype=tf.float32)
     return batch_imgs, batch_labels
-
-
-def viz_voc_prep(batch_data, idx, input_height, input_width, box_color=(0, 1, 0), thickness=1, txt_color=(1, 0, 0)):
-    imgs, labels = prep_voc_data(batch_data, input_height, input_width)
-    img = imgs[idx].numpy().copy()
-    label = labels[idx].numpy()
-    
-    for pts in label:
-        cx_rel, cy_rel, w_rel, h_rel, cls_idx = pts
-        cls_name = VOC_CLS_MAP[cls_idx]
-        xmin_rel, ymin_rel = cx_rel - (w_rel / 2), cy_rel - (h_rel / 2)
-        xmax_rel, ymax_rel = cx_rel + (w_rel / 2), cy_rel + (h_rel / 2)
-        xmin, ymin = round(xmin_rel * input_width), round(ymin_rel * input_height)
-        xmax, ymax = round(xmax_rel * input_width), round(ymax_rel * input_height)
-        cv2.rectangle(img, (xmin, ymin), (xmax, ymax), box_color, thickness)
-        cv2.putText(img, cls_name, (xmin, ymin), fontFace=cv2.FONT_HERSHEY_DUPLEX, fontScale=0.5, color=txt_color)
-    return img
