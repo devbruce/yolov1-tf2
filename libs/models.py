@@ -20,7 +20,7 @@ def get_xception_backbone(cfg, freeze=False):
     backbone = tf.keras.applications.Xception(
         include_top=False,
         weights='imagenet',
-        input_shape=(cfg.input_height, cfg.input_width, 3),
+        input_shape=(None, None, 3),
     )
     backbone.trainable = not freeze
     return backbone
