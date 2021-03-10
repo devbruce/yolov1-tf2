@@ -1,9 +1,8 @@
-from termcolor import colored
-import tensorflow as tf
 import numpy as np
+import tensorflow as tf
 
 
-__all__ = ['postprocess_yolo_format', 'train_step_str_log']
+__all__ = ['postprocess_yolo_format']
 
 
 def postprocess_yolo_format(yolo_pred_boxes, input_height, input_width, cell_size, boxes_per_cell):
@@ -40,13 +39,3 @@ def postprocess_yolo_format(yolo_pred_boxes, input_height, input_width, cell_siz
                 
                 ret[y_grid_idx, x_grid_idx, i] = np.array([x_min, y_min, x_max, y_max, confidence], dtype=np.float32)
     return tf.convert_to_tensor(ret, dtype=tf.float32)
-
-
-def train_step_str_log(total_epoch, total_step, current_epoch, current_step, losses):
-    progress = colored(f'* Epoch: {current_epoch:^4} / {total_epoch:^4} | Step: {current_step:^4} / {total_step:^4}', 'green')
-    total_loss = f'>>> Total Loss: {losses["total_loss"]:<8.4f}'
-    total_loss = colored(total_loss, 'red')
-    loss_info = ' (coord: {:<8.4f}, obj: {:<8.4f}, noobj: {:<8.4f}, class: {:<8.4f})'
-    loss_info = colored(loss_info.format(losses['coord_loss'], losses['obj_loss'], losses['noobj_loss'], losses['class_loss']), 'cyan')
-    log = '\n' + progress + '\n' + total_loss + loss_info
-    return log
