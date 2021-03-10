@@ -64,7 +64,7 @@ def get_losses(one_pred, one_label, cfg):
         responsible_cell_mask[y_grid_idx, x_grid_idx] = 1
         
         # Resonsible box mask (Max IoU per cell)
-        pred_ltrb_abs = postprocess_yolo_format(pred_boxes_with_confidence, cfg)
+        pred_ltrb_abs = postprocess_yolo_format(pred_boxes_with_confidence, cfg.input_height, cfg.input_width, cfg.cell_size, cfg.boxes_per_cell)
         ious = calc_iou(pred_ltrb_abs, label[:-1], cfg)
 
         max_ious = tf.reduce_max(ious, axis=2, keepdims=True)  # shape = [cell_size, cell_size, 1]
