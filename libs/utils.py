@@ -2,7 +2,7 @@ import numpy as np
 import tensorflow as tf
 
 
-__all__ = ['postprocess_yolo_format']
+__all__ = ['postprocess_yolo_format', 'nms']
 
 
 def postprocess_yolo_format(yolo_pred_boxes, input_height, input_width, cell_size, boxes_per_cell):
@@ -39,3 +39,45 @@ def postprocess_yolo_format(yolo_pred_boxes, input_height, input_width, cell_siz
                 
                 ret[y_grid_idx, x_grid_idx, i] = np.array([x_min, y_min, x_max, y_max, confidence], dtype=np.float32)
     return tf.convert_to_tensor(ret, dtype=tf.float32)
+
+
+def nms(pred_boxes, iou_thr=0.7, eps=1e-6):
+    """Non-Maximum Suppression
+    Args:
+        pred_boxes (np.ndarray dtype=np.float32): [x_min, y_min, x_max, y_max, confidence, class_idx]
+        iou_thr (float): IoU Threshold (Default: 0.7)
+        eps (float): Epsilon value for prevent zero division (Default:1e-6)
+
+    Returns:
+        np.ndarray dtype=np.float32: Non-Maximum Suppressed prediction boxes
+    """
+    if len(pred_boxes) == 0:
+        return np.array([], dtype=np.float32)
+
+    x_min, y_min = pred_boxes[:,0], pred_boxes[:,1]
+    x_max, y_max = pred_boxes[:,2], pred_boxes[:,3]
+    width = np.maximum(x_max - x_min, 0.)
+    height = np.maximum(y_max - y_min, 0.)
+    area = width * height
+
+    selected_idx_list = list()
+    confidence = pred_boxes[:, 4]
+    idxs_sorted = np.argsort(confidence)  # Sort in ascending order
+    while len(idxs_sorted) > 0:
+        max_confidence_idx = len(idxs_sorted) - 1
+        non_selected_idxs = idxs_sorted[:max_confidence_idx]
+        selected_idx = idxs_sorted[max_confidence_idx]
+        selected_idx_list.append(selected_idx)
+
+        inter_xmin = np.maximum(x_min[selected_idx], x_min[non_selected_idxs])
+        inter_ymin = np.maximum(y_min[selected_idx], y_min[non_selected_idxs])
+        inter_xmax = np.minimum(x_max[selected_idx], x_max[non_selected_idxs])
+        inter_ymax = np.minimum(y_max[selected_idx], y_max[non_selected_idxs])
+        inter_w = np.maximum(inter_xmax - inter_xmin, 0.)
+        inter_h = np.maximum(inter_ymax - inter_ymin, 0.)
+        inter_area = inter_w * inter_h
+
+        union = (area[selected_idx] + area[non_selected_idxs]) - inter_area + eps
+        iou = inter_area / union
+        idxs_sorted = np.delete(idxs_sorted, np.concatenate(([max_confidence_idx], np.where(iou >= iou_thr)[0])))
+    return pred_boxes[selected_idx_list]
