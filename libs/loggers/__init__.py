@@ -1,6 +1,6 @@
 import tensorflow as tf
 from .console_logs import train_step_console_log
-from .tb_logs import tb_scalars
+from .tb_logs import tb_write_scalars
 
 
 __all__ = ['TrainLogHandler']
@@ -29,5 +29,5 @@ class TrainLogHandler:
         print(log_colored)
 
     def _tb_logs(self, tb_writer, losses):
-        tb_scalars(tb_writer, losses, step=self.optimizer.iterations)
+        tb_write_scalars(tb_writer, losses, step=self.optimizer.iterations)
     
