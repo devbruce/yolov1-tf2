@@ -22,3 +22,4 @@ class Configs:
         self.epochs = 200
         self.batch_size = 32
         self.learning_rate = 1e-3
+        self.val_step = 1
