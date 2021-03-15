@@ -3,7 +3,7 @@ import numpy as np
 from datasets.voc2012_tfds.viz import viz_voc_prep
 
 
-__all__ = ['tb_write_scalars', 'tb_write_imgs', 'tb_write_sampled_voc_gt_imgs']
+__all__ = ['tb_write_scalars', 'tb_write_imgs', 'tb_write_sampled_voc_imgs_with_gt']
 
 
 def tb_write_scalars(tb_writer, losses, step):
@@ -20,16 +20,14 @@ def tb_write_imgs(tb_writer, name, imgs, step, max_outputs):
         tf.summary.image(name, imgs, step=step, max_outputs=max_outputs)
 
 
-def tb_write_sampled_voc_gt_imgs(ds, tb_writer, name, max_outputs):
+def tb_write_sampled_voc_imgs_with_gt(batch_data, input_height, input_width, tb_writer, name, max_outputs):
     viz_img_list = list()
-    viz_batch_data = next(iter(ds))
-    viz_batch_data['imgs'] = viz_batch_data['imgs'][:max_outputs]
-    for idx in range(len(viz_batch_data['imgs'])):
+    for idx in range(len(batch_data['imgs'])):
         viz_img = viz_voc_prep(
-            viz_batch_data,
+            batch_data,
             idx,
-            input_height=cfg.input_height,
-            input_width=cfg.input_width,
+            input_height=input_height,
+            input_width=input_width,
             box_color=(0, 255, 0),
             thickness=1,
             txt_color=(255, 0, 0),
