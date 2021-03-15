@@ -3,7 +3,7 @@ import numpy as np
 from .libs import VOC_CLS_MAP, trim_img_zero_pad, prep_voc_data
 
 
-__all__ = ['viz_voc_origin', 'viz_voc_origin', 'viz_voc_prep']
+__all__ = ['viz_voc_origin', 'viz_voc_prep']
 
 
 def viz_voc_origin(batch_data, idx, box_color=(0, 255, 0), thickness=1, txt_color=(255, 0, 0)):

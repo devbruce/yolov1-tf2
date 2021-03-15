@@ -23,3 +23,5 @@ class Configs:
         self.batch_size = 32
         self.learning_rate = 1e-3
         self.val_step = 1
+        self.tb_img_max_outputs=6
+        
