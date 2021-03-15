@@ -131,11 +131,11 @@ def train_step(model, optimizer, batch_imgs, batch_labels, cfg):
     optimizer.apply_gradients(zip(grads, model.trainable_variables))
 
     # Average with batch size
-    batch_losses['total_loss'] /= cfg.batch_size
-    batch_losses['coord_loss'] /= cfg.batch_size
-    batch_losses['obj_loss'] /= cfg.batch_size
-    batch_losses['noobj_loss'] /= cfg.batch_size
-    batch_losses['class_loss'] /= cfg.batch_size
+    batch_losses['total_loss'] /= len(batch_imgs)
+    batch_losses['coord_loss'] /= len(batch_imgs)
+    batch_losses['obj_loss'] /= len(batch_imgs)
+    batch_losses['noobj_loss'] /= len(batch_imgs)
+    batch_losses['class_loss'] /= len(batch_imgs)
     return batch_losses
 
 
