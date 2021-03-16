@@ -48,7 +48,7 @@ def train_step_console_log(total_epochs, steps_per_epoch, current_epoch, current
     return log, log_colored
 
 
-def val_console_log(total_epochs, current_epoch, losses):
+def val_console_log(total_epochs, current_epoch, losses, APs):
     progress = f'[Validation] * Epoch: {current_epoch:^4} / {total_epochs:^4}'
     current_time = f' | Current Time: {get_current_time_str()}'
     total_loss = f'>>> Total Loss: {losses["total_loss"]:<8.4f}'
@@ -59,11 +59,17 @@ def val_console_log(total_epochs, current_epoch, losses):
         losses['noobj_loss'],
         losses['class_loss'],
         )
-    log = '\n' + progress + current_time + '\n' + total_loss + loss_info
+    mAP = APs.pop('mAP')
+    APs_log = '\n====== mAP ======\n' + f'* mAP: {mAP:<8.4f}\n'
+    for cls_name, ap in APs.items():
+        APs_log += f'- {cls_name}: {ap:<8.4f}\n'
+    APs_log += '====== ====== ======\n'
+    log = '\n' + progress + current_time + '\n' + total_loss + loss_info + '\n' + APs_log
 
     progress_colored = colored(progress, 'green')
     current_time_colored = colored(current_time, 'blue')
     total_loss_colored = colored(total_loss, 'red')
     loss_info_colored = colored(loss_info, 'cyan')
-    log_colored = '\n' + progress_colored + current_time_colored + '\n' + total_loss_colored + loss_info_colored
+    APs_log_colored = colored(APs_log, 'magenta')
+    log_colored = '\n' + progress_colored + current_time_colored + '\n' + total_loss_colored + loss_info_colored + '\n' + APs_log_colored
     return log, log_colored

@@ -37,19 +37,21 @@ class ValLogHandler:
         self.total_epochs = total_epochs
         self.logger = logger
 
-    def logging(self, epoch, losses, tb_writer):
+    def logging(self, epoch, losses, APs, tb_writer):
         self._console_logs(epoch=epoch, losses=losses)
-        self._tb_logs(tb_writer=tb_writer, epoch=epoch, losses=losses)
+        self._tb_logs(tb_writer=tb_writer, epoch=epoch, losses=losses, APs=APs)
 
-    def _console_logs(self, epoch, losses):
+    def _console_logs(self, epoch, losses, APs):
         log, log_colored = val_console_log(
             total_epochs=self.total_epochs,
             current_epoch=epoch,
             losses=losses,
+            APs=APs,
             )
         self.logger.info(log)
         print(log_colored)
 
-    def _tb_logs(self, tb_writer, epoch, losses):
+    def _tb_logs(self, tb_writer, epoch, losses, APs):
         tb_write_scalars(tb_writer, losses, step=epoch)
+        tb_write_mAP(tb_writer, APs, step=epoch)
     

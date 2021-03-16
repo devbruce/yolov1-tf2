@@ -3,7 +3,7 @@ import numpy as np
 from datasets.voc2012_tfds.viz import viz_voc_prep
 
 
-__all__ = ['tb_write_scalars', 'tb_write_imgs', 'tb_write_sampled_voc_imgs_with_gt']
+__all__ = ['tb_write_scalars', 'tb_write_mAP', 'tb_write_imgs', 'tb_write_sampled_voc_imgs_with_gt']
 
 
 def tb_write_scalars(tb_writer, losses, step):
@@ -14,6 +14,14 @@ def tb_write_scalars(tb_writer, losses, step):
         tf.summary.scalar('noobj_loss', losses['noobj_loss'], step=step)
         tf.summary.scalar('class_loss', losses['class_loss'], step=step)
 
+    
+def tb_write_mAP(tb_writer, APs, step):
+    mAP = APs.pop('mAP')
+    with tb_writer.as_default():
+        tf.summary.scalar('mAP', mAP, step=step)
+        for cls_name, ap in APs.items():
+            tf.summary.scalar(f'{cls_name} AP', ap, step=step)
+            
 
 def tb_write_imgs(tb_writer, name, imgs, step, max_outputs):
     with tb_writer.as_default():
