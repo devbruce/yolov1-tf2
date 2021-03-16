@@ -2,11 +2,11 @@ import numpy as np
 import tensorflow as tf
 
 
-__all__ = ['postprocess_yolo_format', 'nms']
+__all__ = ['postprocess_yolo_format', 'yolo_output2boxes', 'nms', 'box_postp2use']
 
 
 def postprocess_yolo_format(yolo_pred_boxes, input_height, input_width, cell_size, boxes_per_cell):
-    """Postprocess yolo_pred_boxes
+    """Postprocess YOLO Format Boxes (Relative cell center xy and relative wh --> Absolute Coordinates)
     Args:
       yolo_pred_boxes (EagerTensor dtype=tf.float32): 4-D tensor [cell_size, cell_size, boxes_per_cell, 5] ==> [cx_rel_in_cell, cy_rel_in_cell, w_rel, h_rel, confidence]
       input_height (int): Height of input image
@@ -39,6 +39,28 @@ def postprocess_yolo_format(yolo_pred_boxes, input_height, input_width, cell_siz
                 
                 ret[y_grid_idx, x_grid_idx, i] = np.array([x_min, y_min, x_max, y_max, confidence], dtype=np.float32)
     return tf.convert_to_tensor(ret, dtype=tf.float32)
+
+
+def yolo_output2boxes(yolo_model_output_raw, input_height, input_width, cell_size, boxes_per_cell):
+    output_boxes = yolo_model_output_raw[:, :, :, :boxes_per_cell*5]
+    output_boxes = tf.reshape(output_boxes, [-1, cell_size, cell_size, boxes_per_cell, 5])
+
+    # Coordinate & Confidence
+    output_boxes_postprocessed = np.empty([len(output_boxes), cell_size, cell_size, boxes_per_cell, 5])
+    for i in range(len(output_boxes)):
+        output_boxes_one = output_boxes[i]
+        output_boxes_postp = postprocess_yolo_format(output_boxes_one, input_height, input_width, cell_size, boxes_per_cell).numpy()
+        output_boxes_postprocessed[i] = output_boxes_postp
+
+    # Class
+    output_classes = yolo_model_output_raw[:, :, :, boxes_per_cell*5:]
+    output_classes_argmax = np.argmax(output_classes, axis=3)
+    output_classes_per_boxes = np.tile(output_classes_argmax[:, :, :, np.newaxis, np.newaxis], reps=[1, 1, 1, boxes_per_cell, 1])
+
+    # Concatenate [(Coordinate & Confidence), Class]
+    output_concat = np.concatenate((output_boxes_postprocessed, output_classes_per_boxes), axis=4)
+    boxes = output_concat.reshape(len(output_boxes), cell_size * cell_size *boxes_per_cell, 6)
+    return boxes
 
 
 def nms(pred_boxes, iou_thr=0.7, eps=1e-6):
@@ -81,3 +103,22 @@ def nms(pred_boxes, iou_thr=0.7, eps=1e-6):
         iou = inter_area / union
         idxs_sorted = np.delete(idxs_sorted, np.concatenate(([max_confidence_idx], np.where(iou >= iou_thr)[0])))
     return pred_boxes[selected_idx_list]
+
+
+def box_postp2use(pred_boxes, nms_iou_thr=0.7, conf_thr=0.5):
+    """Postprocess prediction boxes to use
+    
+    * Non-Maximum Suppression
+    * Filter boxes with Confidence Score
+    
+    Args:
+      pred_boxes (np.ndarray dtype=np.float32): pred boxes postprocessed by yolo_output2boxes. shape: [cfg.cell_size * cfg.cell_size *cfg.boxes_per_cell, 6]
+      nms_iou_thr (float): Non-Maximum Suppression IoU Threshold
+      conf_thr (float): Confidence Score Threshold
+    
+    Returns:
+      np.ndarray (dtype=np.float32)
+    """
+    boxes_nms = nms(pred_boxes=pred_boxes, iou_thr=nms_iou_thr)
+    boxes_conf_filtered = boxes_nms[boxes_nms[:, 4] >= conf_thr]
+    return boxes_conf_filtered
