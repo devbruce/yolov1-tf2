@@ -25,3 +25,5 @@ class Configs:
         self.val_step = 1
         self.tb_img_max_outputs=6
         
+        self.nms_iou_thr = 0.7
+        self.conf_thr = 0.5
