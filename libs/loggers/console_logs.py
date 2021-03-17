@@ -59,6 +59,7 @@ def val_console_log(total_epochs, current_epoch, losses, APs):
         losses['noobj_loss'],
         losses['class_loss'],
         )
+    APs = APs.copy()
     mAP = APs.pop('mAP')
     APs_log = '\n====== mAP ======\n' + f'* mAP: {mAP:<8.4f}\n'
     for cls_name, ap in APs.items():

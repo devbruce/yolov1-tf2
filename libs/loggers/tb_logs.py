@@ -16,6 +16,7 @@ def tb_write_scalars(tb_writer, losses, step):
 
     
 def tb_write_mAP(tb_writer, APs, step):
+    APs = APs.copy()
     mAP = APs.pop('mAP')
     with tb_writer.as_default():
         tf.summary.scalar('mAP', mAP, step=step)

@@ -1,6 +1,6 @@
 import tensorflow as tf
 from .console_logs import train_step_console_log, val_console_log
-from .tb_logs import tb_write_scalars
+from .tb_logs import tb_write_scalars, tb_write_mAP
 
 
 __all__ = ['TrainLogHandler', 'ValLogHandler']
@@ -38,7 +38,7 @@ class ValLogHandler:
         self.logger = logger
 
     def logging(self, epoch, losses, APs, tb_writer):
-        self._console_logs(epoch=epoch, losses=losses)
+        self._console_logs(epoch=epoch, losses=losses, APs=APs)
         self._tb_logs(tb_writer=tb_writer, epoch=epoch, losses=losses, APs=APs)
 
     def _console_logs(self, epoch, losses, APs):
@@ -54,4 +54,3 @@ class ValLogHandler:
     def _tb_logs(self, tb_writer, epoch, losses, APs):
         tb_write_scalars(tb_writer, losses, step=epoch)
         tb_write_mAP(tb_writer, APs, step=epoch)
-    
