@@ -89,7 +89,7 @@ def main(argv):
         directory=ProjectPath.VOC2012_CKPTS_DIR.value,
         max_to_keep=5
     )
-    
+
     latest_ckpt = tf.train.latest_checkpoint(checkpoint_dir=ProjectPath.VOC2012_CKPTS_DIR.value)
     if latest_ckpt:
         ckpt.restore(latest_ckpt)
@@ -212,4 +212,4 @@ def validation(epoch):
 
 
 if __name__ == '__main__':
-  app.run(main)
+    app.run(main)
