@@ -23,7 +23,8 @@ class Configs:
         self.batch_size = 32
         self.learning_rate = 1e-3
         self.val_step = 1
-        self.tb_img_max_outputs=6
+        self.tb_img_max_outputs= 4
         
+        # Box filtering
         self.nms_iou_thr = 0.7
         self.conf_thr = 0.5
