@@ -15,4 +15,10 @@ def _mkdir_dirs(*dir_paths):
             os.makedirs(dir_path)
 
 
-_mkdir_dirs(ProjectPath.LOGS_DIR.value, ProjectPath.CONSOLE_LOGS_DIR.value, ProjectPath.TB_LOGS_DIR.value)
+_mkdir_dirs(
+    ProjectPath.LOGS_DIR.value,
+    ProjectPath.CKPTS_DIR.value,
+    ProjectPath.VOC2012_CKPTS_DIR.value,
+    ProjectPath.CONSOLE_LOGS_DIR.value,
+    ProjectPath.TB_LOGS_DIR.value,
+    )
