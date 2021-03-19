@@ -13,7 +13,7 @@ from libs.models import YOLO, get_xception_backbone
 from libs.losses import train_step, get_batch_losses, get_losses
 from libs.loggers import TrainLogHandler, ValLogHandler
 from libs.loggers.console_logs import get_logger
-from libs.loggers.tb_logs import tb_write_sampled_voc_imgs_with_gt, tb_write_imgs
+from libs.loggers.tb_logs import tb_write_sampled_voc_gt_imgs, tb_write_imgs
 from libs.utils import yolo_output2boxes, box_postp2use, viz_pred
 from datasets.voc2012_tfds.voc2012 import GetVoc2012
 from datasets.voc2012_tfds.libs import prep_voc_data, VOC_CLS_MAP
@@ -59,7 +59,7 @@ def main(argv):
     val_viz_batch_data = next(iter(voc2012.get_val_ds().take(1)))
 
     # Tensorboard Visualization (Validation GT)
-    tb_write_sampled_voc_imgs_with_gt(
+    tb_write_sampled_voc_gt_imgs(
         batch_data=val_viz_batch_data,
         input_height=cfg.input_height,
         input_width=cfg.input_width,
