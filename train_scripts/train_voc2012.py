@@ -114,7 +114,7 @@ def train():
         for step, batch_data in enumerate(train_ds, 1):
             batch_imgs, batch_labels = prep_voc_data(batch_data, input_height=cfg.input_height, input_width=cfg.input_width)
             losses = train_step(yolo, optimizer, batch_imgs, batch_labels, cfg)
-            lr = optimizer.lr.numpy()
+            lr = optimizer.lr(optimizer.iterations).numpy()
             train_log_handler.logging(epoch=epoch, step=step, losses=losses, lr=lr, tb_writer=tb_train_writer)
 
         if epoch % FLAGS.val_step == 0:
