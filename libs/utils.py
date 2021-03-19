@@ -2,7 +2,7 @@ import numpy as np
 import tensorflow as tf
 
 
-__all__ = ['postprocess_yolo_format', 'yolo_output2boxes', 'nms', 'box_postp2use']
+__all__ = ['postprocess_yolo_format', 'yolo_output2boxes', 'nms', 'box_postp2use', 'viz_pred']
 
 
 def postprocess_yolo_format(yolo_pred_boxes, input_height, input_width, cell_size, boxes_per_cell):
@@ -122,3 +122,19 @@ def box_postp2use(pred_boxes, nms_iou_thr=0.7, conf_thr=0.5):
     boxes_nms = nms(pred_boxes=pred_boxes, iou_thr=nms_iou_thr)
     boxes_conf_filtered = boxes_nms[boxes_nms[:, 4] >= conf_thr]
     return boxes_conf_filtered
+
+
+def viz_pred(img, labels, cls_map):
+    """
+    Args:
+      labels (np.ndarray dtype=np.float32): shape=(n, 6) --> [x_min_abs, y_min_abs, x_max_abs, y_max_abs, confidence, class_idx]
+    """
+    img = img.copy()
+    img = (img * 255).astype(np.uint8)
+    for label in labels:
+        *pts, confidence, cls_idx = label
+        left, top, right, bottom = map(round, pts)
+        cls_name = cls_map[int(cls_idx)]
+        cv2.rectangle(img, (left, top), (right, bottom), (0, 0, 255), 1)
+        cv2.putText(img, f'{cls_name} {confidence:.2f}', (left, top), fontFace=cv2.FONT_HERSHEY_DUPLEX, fontScale=0.5, color=(255, 0, 0))
+    return img
