@@ -30,6 +30,7 @@ flags.DEFINE_integer('val_step', default=cfg.val_step, help='Validation interval
 flags.DEFINE_float('init_lr', default=cfg.learning_rate, help='Initial learning rate')
 flags.DEFINE_float('lr_decay_rate', default=0.5, help='Decay rate of learning rate')
 flags.DEFINE_integer('lr_decay_steps', default=25000, help='Learning rate decay steps')
+flags.DEFINE_integer('val_sample_num', default=0, help='Validation sampling. 0 means use all validation set')
 # flags.mark_flag_as_required('')
 
 # Save some gpu errors
@@ -53,6 +54,7 @@ def main(argv):
         
     # Logger
     logger = get_logger()
+    logger.propagate = False
 
     # Tensorboard
     tb_train_writer = tf.summary.create_file_writer(ProjectPath.TB_LOGS_TRAIN_DIR.value)
@@ -95,7 +97,7 @@ def main(argv):
     latest_ckpt_log = '\n' + '=' * 60 + '\n'
     if latest_ckpt:
         ckpt.restore(latest_ckpt)
-        latest_ckpt_log += f'* Load latest checkpoint file [{latest_ckpt}]', 
+        latest_ckpt_log += f'* Load latest checkpoint file [{latest_ckpt}]'
     else:
         latest_ckpt_log += '* Training from scratch'
     latest_ckpt_log += ('\n' + '=' * 60 + '\n')
@@ -133,7 +135,10 @@ def validation(epoch):
     global mAP_prev
     mAP_prev = 0
     
-    val_ds = voc2012.get_val_ds()
+    if FLAGS.val_sample_num:
+        val_ds = voc2012.get_val_ds().take(FLAGS.val_sample_num)
+    else:
+        val_ds = voc2012.get_val_ds()
     val_log_handler = ValLogHandler(total_epochs=FLAGS.epochs, logger=logger)
     val_losses_raw = {
         'total_loss': tf.keras.metrics.MeanTensor(),
