@@ -129,6 +129,9 @@ def viz_pred(img, labels, cls_map):
     """
     Args:
       labels (np.ndarray dtype=np.float32): shape=(n, 6) --> [x_min_abs, y_min_abs, x_max_abs, y_max_abs, confidence, class_idx]
+
+    Returns:
+      np.ndarray (dtype=np.uint8)
     """
     img = img.copy()
     img = (img * 255).astype(np.uint8)
