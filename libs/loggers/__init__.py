@@ -1,6 +1,6 @@
 import tensorflow as tf
 from .console_logs import train_step_console_log, val_console_log
-from .tb_logs import tb_write_losses, tb_write_APs
+from .tb_logs import tb_write_losses, tb_write_lr, tb_write_APs
 
 
 __all__ = ['TrainLogHandler', 'ValLogHandler']

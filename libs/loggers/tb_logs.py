@@ -15,7 +15,7 @@ def tb_write_losses(tb_writer, losses, step):
         tf.summary.scalar('class_loss', losses['class_loss'], step=step)
 
 
-def tb_write_lr(tb_wrtier, lr, step):
+def tb_write_lr(tb_writer, lr, step):
     with tb_writer.as_default():
         tf.summary.scalar('learning_rate', lr, step=step)
 
