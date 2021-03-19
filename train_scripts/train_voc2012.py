@@ -92,14 +92,15 @@ def main(argv):
     )
 
     latest_ckpt = tf.train.latest_checkpoint(checkpoint_dir=ProjectPath.VOC2012_CKPTS_DIR.value)
-    latest_ckpt_log = colored('\n' + '=' * 60 + '\n', 'green')
+    latest_ckpt_log = '\n' + '=' * 60 + '\n'
     if latest_ckpt:
         ckpt.restore(latest_ckpt)
-        latest_ckpt_log += colored(f'* Load latest checkpoint file [{latest_ckpt}]', 'magenta')
+        latest_ckpt_log += f'* Load latest checkpoint file [{latest_ckpt}]', 
     else:
-        latest_ckpt_log += colored('* Training from scratch', 'green')
-    latest_ckpt_log += colored('\n' + '=' * 60 + '\n', 'green')
-    print(latest_ckpt_log)
+        latest_ckpt_log += '* Training from scratch'
+    latest_ckpt_log += ('\n' + '=' * 60 + '\n')
+    logger.info(latest_ckpt_log)
+    print(colored(latest_ckpt_log, 'magenta'))
 
     # Training
     train()
@@ -121,9 +122,11 @@ def train():
             validation(epoch=epoch)
     
     yolo.save(filepath=VOC2012_PB_PATH, save_format='tf')
-    print('\n' + '=' * 60)
-    print('* Training Completed and Save pb file [{VOC2012_PB_PATH}]')
-    print('=' * 60 + '\n')
+    pb_save_log = '\n' + '=' * 60 + '\n'
+    pb_save_log += f'* Training Completed and Save pb file [{VOC2012_PB_PATH}]'
+    pb_save_log += '\n' + '=' * 60 + '\n'
+    logger.info(pb_save_log)
+    print(colored(pb_save_log, 'green'))
     
     
 def validation(epoch):
@@ -206,9 +209,11 @@ def validation(epoch):
     if APs['mAP'] >= mAP_prev:
         ckpt_manager.save(checkpoint_number=ckpt.step)
         mAP_prev = APs['mAP']
-        print('\n' + '=' * 30)
-        print('* Save checkpoint file')
-        print('=' * 30 + '\n')
+        ckpt_log = '\n' + '=' * 60 + '\n'
+        ckpt_log += '* Save checkpoint file'
+        ckpt_log += '\n' + '=' * 60 + '\n'
+        logger.info(ckpt_log)
+        print(colored(ckpt_log, 'magenta'))
     ckpt.step.assign_add(1)
 
 
