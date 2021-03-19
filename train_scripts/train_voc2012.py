@@ -8,6 +8,7 @@ import numpy as np
 import tensorflow as tf
 
 from absl import flags, app
+from termcolor import colored
 from pascalvoc_ap.ap import get_ap
 from libs.models import YOLO, get_xception_backbone
 from libs.losses import train_step, get_batch_losses, get_losses
@@ -82,7 +83,7 @@ def main(argv):
     optimizer = tf.optimizers.Adam(learning_rate=lr_schedule)
 
     # Checkpoint
-    VOC2012_PB_PATH = os.path.join(ProjectPath.VOC2012_CKPTS_DIR.value, f'yoloy_epoch_{FLAGS.epochs}.pb')
+    VOC2012_PB_PATH = os.path.join(ProjectPath.VOC2012_CKPTS_DIR.value, f'yolo_epoch_{FLAGS.epochs}.pb')
     ckpt = tf.train.Checkpoint(step=tf.Variable(0), model=yolo)
     ckpt_manager = tf.train.CheckpointManager(
         ckpt,
@@ -91,15 +92,14 @@ def main(argv):
     )
 
     latest_ckpt = tf.train.latest_checkpoint(checkpoint_dir=ProjectPath.VOC2012_CKPTS_DIR.value)
+    latest_ckpt_log = colored('\n' + '=' * 60 + '\n', 'green')
     if latest_ckpt:
         ckpt.restore(latest_ckpt)
-        print('\n' + '=' * 60)
-        print(f'* Load latest checkpoint file [{latest_ckpt}]')
-        print('=' * 60 + '\n')
+        latest_ckpt_log += colored(f'* Load latest checkpoint file [{latest_ckpt}]', 'magenta')
     else:
-        print('\n' + '=' * 60)
-        print(f'* Training from scratch')
-        print('=' * 60 + '\n')
+        latest_ckpt_log += colored('* Training from scratch', 'green')
+    latest_ckpt_log += colored('\n' + '=' * 60 + '\n', 'green')
+    print(latest_ckpt_log)
 
     # Training
     train()
