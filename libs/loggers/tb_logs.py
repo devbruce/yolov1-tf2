@@ -19,9 +19,9 @@ def tb_write_mAP(tb_writer, APs, step):
     APs = APs.copy()
     mAP = APs.pop('mAP')
     with tb_writer.as_default():
-        tf.summary.scalar('mAP', mAP, step=step)
+        tf.summary.scalar('[Val] mAP', mAP, step=step)
         for cls_name, ap in APs.items():
-            tf.summary.scalar(f'{cls_name} AP', ap, step=step)
+            tf.summary.scalar(f'[Val] {cls_name} AP', ap, step=step)
             
 
 def tb_write_imgs(tb_writer, name, imgs, step, max_outputs):
