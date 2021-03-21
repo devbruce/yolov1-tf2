@@ -29,7 +29,7 @@ flags.DEFINE_integer('tb_img_max_outputs', default=cfg.tb_img_max_outputs, help=
 flags.DEFINE_integer('val_step', default=cfg.val_step, help='Validation interval during training')
 flags.DEFINE_float('init_lr', default=cfg.learning_rate, help='Initial learning rate')
 flags.DEFINE_float('lr_decay_rate', default=0.5, help='Decay rate of learning rate')
-flags.DEFINE_integer('lr_decay_steps', default=25000, help='Learning rate decay steps')
+flags.DEFINE_integer('lr_decay_steps', default=15000, help='Learning rate decay steps')
 flags.DEFINE_integer('val_sample_num', default=0, help='Validation sampling. 0 means use all validation set')
 # flags.mark_flag_as_required('')
 
@@ -208,7 +208,13 @@ def validation(epoch):
         img = sampled_voc_imgs[idx].numpy()
         labels = box_postp2use(pred_boxes=sampled_voc_output_boxes[idx], nms_iou_thr=cfg.nms_iou_thr, conf_thr=cfg.conf_thr)
         pred_viz_imgs[idx] = viz_pred(img=img, labels=labels, cls_map=VOC_CLS_MAP)
-    tb_write_imgs(tb_val_writer, 'Validation Prediction', imgs=pred_viz_imgs, step=epoch, max_outputs=FLAGS.tb_img_max_outputs)
+    tb_write_imgs(
+        tb_val_writer,
+        name=f'Validation Prediction (confidence_thr: {cfg.conf_thr}, nms_iou_thr: {cfg.nms_iou_thr})',
+        imgs=pred_viz_imgs,
+        step=epoch,
+        max_outputs=FLAGS.tb_img_max_outputs,
+    )
 
     # Save Checkpoint
     if APs['mAP'] >= mAP_prev:

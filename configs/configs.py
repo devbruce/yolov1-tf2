@@ -11,7 +11,7 @@ class Configs:
         self.eps = 1e-6
 
         # Loss Coefficient (Lambda coefficients of paper)
-        self.lambda_coord = 5     # Paper Default: 5
+        self.lambda_coord = 1     # Paper Default: 5
         self.lambda_noobj = 0.5   # Paper Default: 0.5
 
         # Loss Coefficient (Custom lambda coefficients. It is not mentioned in the paper)
@@ -23,8 +23,8 @@ class Configs:
         self.batch_size = 32
         self.learning_rate = 1e-3
         self.val_step = 1
-        self.tb_img_max_outputs= 4
+        self.tb_img_max_outputs= 6
         
         # Box filtering
-        self.nms_iou_thr = 0.7
-        self.conf_thr = 0.5
+        self.nms_iou_thr = 0.5
+        self.conf_thr = 0.7
