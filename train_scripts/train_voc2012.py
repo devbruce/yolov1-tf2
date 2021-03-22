@@ -188,7 +188,7 @@ def validation(epoch):
                 *pts, conf, cls_idx = output_box
                 cls_name = VOC_CLS_MAP[cls_idx]
                 val_preds_all.append([cls_name, conf, *map(round, pts), img_id])
-                img_id += 1
+            img_id += 1
 
     APs = get_ap(preds_all=val_preds_all, gts_all=voc2012_val_gts_all, classes=list(VOC_CLS_MAP.values()), iou_thr=0.5)
     val_losses = dict()
