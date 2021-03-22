@@ -46,6 +46,12 @@ def trim_img_zero_pad(arr):
 
 
 def prep_voc_data(batch_data, input_height, input_width):
+    """
+    Returns:
+      tuple: (batch_imgs, batch_labels)
+        batch_imgs (EagerTensor dtype=tf.float32)
+        batch_labels (EagerTensor dtype=tf.float32 in list)-> [center_x, center_y, width, height, cls_idx] (Absolute coordinates)
+    """
     imgs, labels = batch_data['imgs'].numpy(), batch_data['labels']
     num_batch = len(imgs)
     batch_labels = list()
@@ -63,15 +69,15 @@ def prep_voc_data(batch_data, input_height, input_width):
         origin_height, origin_width, _ = origin_size_img.shape
         
         pts = labels['bbox'][i].numpy()
-        y_min_rel, x_min_rel = pts[:, 0], pts[:, 1]
-        y_max_rel, x_max_rel = pts[:, 2], pts[:, 3]
+        y_min, x_min = pts[:, 0] * input_height, pts[:, 1] * input_width
+        y_max, x_max = pts[:, 2] * input_height, pts[:, 3] * input_width
         
-        cx_rel = (x_min_rel + x_max_rel) / 2
-        cy_rel = (y_min_rel + y_max_rel) / 2
-        w_rel = (x_max_rel - x_min_rel)
-        h_rel = (y_max_rel - y_min_rel)
+        cx = (x_min + x_max) / 2
+        cy = (y_min + y_max) / 2
+        w = (x_max - x_min)
+        h = (y_max - y_min)
         
-        label_preps = np.array([cx_rel, cy_rel, w_rel, h_rel, cls_idx], dtype=np.float32).T
+        label_preps = np.array([cx, cy, w, h, cls_idx], dtype=np.float32).T
         label_preps = label_preps[np.where(np.any(label_preps[:, :4], axis=1) == True)]  # Filter dummy data by padded batch
         label_preps = tf.convert_to_tensor(label_preps, dtype=tf.float32)
         batch_labels.append(label_preps)
