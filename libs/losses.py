@@ -17,6 +17,7 @@ def get_losses(one_pred, one_label, cfg):
     Returns:
       dict: total_loss, coord_loss, obj_loss, noobj_loss, class_loss
     """
+    one_pred = _pred_limit_zero2one(one_pred)
     pred_boxes_with_confidence = one_pred[:, :, :cfg.boxes_per_cell*5]  # 5 ==> [x_center, y_center, width, height, confidence]
     pred_boxes_with_confidence = tf.reshape(pred_boxes_with_confidence, [cfg.cell_size, cfg.cell_size, cfg.boxes_per_cell, 5])
     pred_boxes = pred_boxes_with_confidence[:, :, :, :4]
@@ -25,8 +26,11 @@ def get_losses(one_pred, one_label, cfg):
     
     pred_cx_rel_in_cell, pred_cy_rel_in_cell = pred_boxes[:, :, :, 0], pred_boxes[:, :, :, 1]
     pred_w_rel, pred_h_rel = pred_boxes[:, :, :, 2], pred_boxes[:, :, :, 3]
-    pred_sqrt_w_rel = tf.square(pred_w_rel) * _get_neg2neg_mask(pred_w_rel)
-    pred_sqrt_h_rel = tf.square(pred_h_rel) * _get_neg2neg_mask(pred_h_rel)
+    pred_sqrt_w_rel = tf.square(pred_w_rel)
+    pred_sqrt_h_rel = tf.square(pred_h_rel)
+
+    #pred_sqrt_w_rel = tf.square(pred_w_rel) * _get_neg2neg_mask(pred_w_rel)
+    #pred_sqrt_h_rel = tf.square(pred_h_rel) * _get_neg2neg_mask(pred_h_rel)
 
     ## Handle negative coordinates of prediction (More penalty to negative widths and heights)
     # pred_sqrt_w_rel = (tf.square(pred_w_rel) * _get_neg2zero_mask(pred_w_rel)) + (pred_w_rel * _get_pos2zero_mask(pred_w_rel))
@@ -137,6 +141,25 @@ def train_step(model, optimizer, batch_imgs, batch_labels, cfg):
     batch_losses['noobj_loss'] /= len(batch_imgs)
     batch_losses['class_loss'] /= len(batch_imgs)
     return batch_losses
+
+
+def _pred_limit_zero2one(pred_tensor):
+    pred_np = pred_tensor.numpy()
+    over_one_mask = np.ones_like(pred_np, dtype=np.float32)
+    over_one_mask[pred_np > 1.] = 0.
+    tf_over_one_mask = tf.convert_to_tensor(over_one_mask, dtype=tf.float32)
+    pred_tensor = pred_tensor * tf_over_one_mask
+
+    add_one_mat = np.zeros_like(pred_np)
+    add_one_mat[np.where(pred_tensor.numpy() == 0.)] = 1.
+    pred_tensor = pred_tensor + add_one_mat
+
+    neg_mask = np.ones_like(pred_np, dtype=np.float32)
+    neg_mask[pred_np < 0.] = 0.
+    tf_neg_mask = tf.convert_to_tensor(neg_mask, dtype=tf.float32)
+
+    pred_tensor = pred_tensor * neg_mask
+    return pred_tensor
 
 
 def _get_neg2neg_mask(pred):
