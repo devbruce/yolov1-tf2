@@ -20,7 +20,7 @@ class Configs:
 
         # Train
         self.epochs = 135          # Paper total epoch: 75 (lr: 1e-2) + 30 (lr: 1e-3) + 30 (lr: 1e-4)
-        self.init_lr = 1e-2        # Paper initial learning rate: 1e-2
+        self.init_lr = 1e-3        # Paper Default: 1e-2
         self.batch_size = 32
         self.val_step = 1
         self.tb_img_max_outputs = 6
