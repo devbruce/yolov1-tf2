@@ -51,8 +51,9 @@ def get_losses(one_pred, one_label, cfg):
         cy_in_cell = cy / cfg.cell_size
         w_sqrt, h_sqrt = tf.sqrt(w), tf.sqrt(h)
 
-        x_grid_idx = cx // cell_w
-        y_grid_idx = cy // cell_h
+        y_grid_idx = int(cy // cell_h)  # Tensor to Int
+        x_grid_idx = int(cx // cell_w)
+        
         # Responsible cell mask
         # ==> If the center of an object falls into a grid cell, that grid cell is responsible for detecting that object
         # (Refer to page2 2.Unified Detection of papar)
@@ -70,8 +71,8 @@ def get_losses(one_pred, one_label, cfg):
         responsible_mask = responsible_cell_mask * resonsible_box_mask
 
         # Coordinate Loss
-        cx_loss = tf.reduce_sum(tf.square(responsible_mask * (pred_cx_in_cell - cx_rel_in_cell)))
-        cy_loss = tf.reduce_sum(tf.square(responsible_mask * (pred_cy_in_cell - cy_rel_in_cell)))
+        cx_loss = tf.reduce_sum(tf.square(responsible_mask * (pred_cx_in_cell - cx_in_cell)))
+        cy_loss = tf.reduce_sum(tf.square(responsible_mask * (pred_cy_in_cell - cy_in_cell)))
         w_sqrt_loss = tf.reduce_sum(tf.square(responsible_mask * (pred_w_sqrt - w_sqrt)))
         h_sqrt_loss = tf.reduce_sum(tf.square(responsible_mask * (pred_h_sqrt - h_sqrt)))
         coord_loss = cfg.lambda_coord * (cx_loss + cy_loss + w_sqrt_loss + h_sqrt_loss)
