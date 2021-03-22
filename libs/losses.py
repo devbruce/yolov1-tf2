@@ -17,24 +17,14 @@ def get_losses(one_pred, one_label, cfg):
     Returns:
       dict: total_loss, coord_loss, obj_loss, noobj_loss, class_loss
     """
-    one_pred = _pred_limit_zero2one(one_pred)
     pred_boxes_with_confidence = one_pred[:, :, :cfg.boxes_per_cell*5]  # 5 ==> [x_center, y_center, width, height, confidence]
     pred_boxes_with_confidence = tf.reshape(pred_boxes_with_confidence, [cfg.cell_size, cfg.cell_size, cfg.boxes_per_cell, 5])
     pred_boxes = pred_boxes_with_confidence[:, :, :, :4]
     pred_confidences = pred_boxes_with_confidence[:, :, :, 4]
     pred_cell_classes = one_pred[:, :, cfg.boxes_per_cell*5:]
     
-    pred_cx_rel_in_cell, pred_cy_rel_in_cell = pred_boxes[:, :, :, 0], pred_boxes[:, :, :, 1]
-    pred_w_rel, pred_h_rel = pred_boxes[:, :, :, 2], pred_boxes[:, :, :, 3]
-    pred_sqrt_w_rel = tf.square(pred_w_rel)
-    pred_sqrt_h_rel = tf.square(pred_h_rel)
-
-    #pred_sqrt_w_rel = tf.square(pred_w_rel) * _get_neg2neg_mask(pred_w_rel)
-    #pred_sqrt_h_rel = tf.square(pred_h_rel) * _get_neg2neg_mask(pred_h_rel)
-
-    ## Handle negative coordinates of prediction (More penalty to negative widths and heights)
-    # pred_sqrt_w_rel = (tf.square(pred_w_rel) * _get_neg2zero_mask(pred_w_rel)) + (pred_w_rel * _get_pos2zero_mask(pred_w_rel))
-    # pred_sqrt_h_rel = (tf.square(pred_h_rel) * _get_neg2zero_mask(pred_h_rel)) + (pred_h_rel * _get_pos2zero_mask(pred_h_rel))
+    pred_cx_in_cell, pred_cy_in_cell = pred_boxes[:, :, :, 0], pred_boxes[:, :, :, 1]
+    pred_w_sqrt, pred_h_sqrt = pred_boxes[:, :, :, 2], pred_boxes[:, :, :, 3]
 
     # Loop the number of objects
     losses = {
@@ -44,28 +34,29 @@ def get_losses(one_pred, one_label, cfg):
         'noobj_loss': 0.,
         'class_loss': 0.,
     }
+    cell_w, cell_h = cfg.input_width // cfg.cell_size, cfg.input_height // cfg.cell_size
     obj_n = len(one_label)
     for obj_idx in range(obj_n):
         label = one_label[obj_idx]
 
         # Label Info
         cls_idx = tf.cast(label[4], tf.int32)
-        cx_rel, cy_rel, w_rel, h_rel = label[0], label[1], label[2], label[3]
-        cx_rel = tf.minimum(cx_rel, 1. - cfg.eps)
-        cy_rel = tf.minimum(cy_rel, 1. - cfg.eps)
-        x_grid_idx = int(cx_rel * cfg.cell_size)
-        y_grid_idx = int(cy_rel * cfg.cell_size)
+        cx, cy, w, h = label[0], label[1], label[2], label[3]
+        cx = tf.minimum(cx, cfg.input_width - cfg.eps)
+        cy = tf.minimum(cy, cfg.input_height - cfg.eps)
+        cx_in_cell = cx / cfg.cell_size
+        cy_in_cell = cy / cfg.cell_size
+        w_sqrt, h_sqrt = tf.sqrt(w), tf.sqrt(h)
 
-        cx_rel_in_cell = (cx_rel * cfg.cell_size) - x_grid_idx
-        cy_rel_in_cell = (cy_rel * cfg.cell_size) - y_grid_idx
-        sqrt_w_rel = tf.square(w_rel)
-        sqrt_h_rel = tf.square(h_rel)
-
+        x_grid_idx = cx // cell_w
+        y_grid_idx = cy // cell_h
         # Responsible cell mask
         # ==> If the center of an object falls into a grid cell, that grid cell is responsible for detecting that object
         # (Refer to page2 2.Unified Detection of papar)
         responsible_cell_mask = np.zeros([cfg.cell_size, cfg.cell_size, 1])
         responsible_cell_mask[y_grid_idx, x_grid_idx] = 1
+
+        #===========#===========#===========#===========#===========#===========#===========#===========#===========
         
         # Resonsible box mask (Max IoU per cell)
         pred_ltrb_abs = postprocess_yolo_format(pred_boxes_with_confidence, cfg.input_height, cfg.input_width, cfg.cell_size, cfg.boxes_per_cell)
@@ -78,10 +69,10 @@ def get_losses(one_pred, one_label, cfg):
         responsible_mask = responsible_cell_mask * resonsible_box_mask
 
         # Coordinate Loss
-        cx_loss = tf.reduce_sum(tf.square(responsible_mask * (pred_cx_rel_in_cell - cx_rel_in_cell)))
-        cy_loss = tf.reduce_sum(tf.square(responsible_mask * (pred_cy_rel_in_cell - cy_rel_in_cell)))
-        sqrt_w_loss = tf.reduce_sum(tf.square(responsible_mask * (pred_sqrt_w_rel - sqrt_w_rel)))
-        sqrt_h_loss = tf.reduce_sum(tf.square(responsible_mask * (pred_sqrt_h_rel - sqrt_h_rel)))
+        cx_loss = tf.reduce_sum(tf.square(responsible_mask * (pred_cx_in_cell - cx_rel_in_cell)))
+        cy_loss = tf.reduce_sum(tf.square(responsible_mask * (pred_cy_in_cell - cy_rel_in_cell)))
+        sqrt_w_loss = tf.reduce_sum(tf.square(responsible_mask * (pred_w_sqrt - w_sqrt)))
+        sqrt_h_loss = tf.reduce_sum(tf.square(responsible_mask * (pred_h_sqrt - h_sqrt)))
         coord_loss = cfg.lambda_coord * (cx_loss + cy_loss + sqrt_w_loss + sqrt_h_loss)
 
         # Objectness Loss
