@@ -35,12 +35,11 @@ def viz_voc_prep(batch_data, idx, input_height, input_width, box_color=(0, 255, 
     label = labels[idx].numpy()
     
     for pts in label:
-        cx_rel, cy_rel, w_rel, h_rel, cls_idx = pts
+        cx, cy, w, h, cls_idx = pts
         cls_name = VOC_CLS_MAP[cls_idx]
-        xmin_rel, ymin_rel = cx_rel - (w_rel / 2), cy_rel - (h_rel / 2)
-        xmax_rel, ymax_rel = cx_rel + (w_rel / 2), cy_rel + (h_rel / 2)
-        xmin, ymin = round(xmin_rel * input_width), round(ymin_rel * input_height)
-        xmax, ymax = round(xmax_rel * input_width), round(ymax_rel * input_height)
+        xmin, ymin = cx - (w / 2), cy - (h / 2)
+        xmax, ymax = cx + (w / 2), cy + (h / 2)
+        xmin, ymin, xmax, ymax = map(round, [xmin, ymin, xmax, ymax])
         cv2.rectangle(img, (xmin, ymin), (xmax, ymax), box_color, thickness)
         cv2.putText(img, cls_name, (xmin, ymin), fontFace=cv2.FONT_HERSHEY_DUPLEX, fontScale=0.5, color=txt_color)
     return img

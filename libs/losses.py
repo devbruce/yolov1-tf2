@@ -58,8 +58,6 @@ def get_losses(one_pred, one_label, cfg):
         # (Refer to page2 2.Unified Detection of papar)
         responsible_cell_mask = np.zeros([cfg.cell_size, cfg.cell_size, 1])
         responsible_cell_mask[y_grid_idx, x_grid_idx] = 1
-
-        #===========#===========#===========#===========#===========#===========#===========#===========#===========
         
         # Resonsible box mask (Max IoU per cell)
         pred_ltrb = postprocess_yolo_format(pred_boxes_with_confidence, cfg.input_height, cfg.input_width, cfg.cell_size, cfg.boxes_per_cell)
@@ -74,9 +72,9 @@ def get_losses(one_pred, one_label, cfg):
         # Coordinate Loss
         cx_loss = tf.reduce_sum(tf.square(responsible_mask * (pred_cx_in_cell - cx_rel_in_cell)))
         cy_loss = tf.reduce_sum(tf.square(responsible_mask * (pred_cy_in_cell - cy_rel_in_cell)))
-        sqrt_w_loss = tf.reduce_sum(tf.square(responsible_mask * (pred_w_sqrt - w_sqrt)))
-        sqrt_h_loss = tf.reduce_sum(tf.square(responsible_mask * (pred_h_sqrt - h_sqrt)))
-        coord_loss = cfg.lambda_coord * (cx_loss + cy_loss + sqrt_w_loss + sqrt_h_loss)
+        w_sqrt_loss = tf.reduce_sum(tf.square(responsible_mask * (pred_w_sqrt - w_sqrt)))
+        h_sqrt_loss = tf.reduce_sum(tf.square(responsible_mask * (pred_h_sqrt - h_sqrt)))
+        coord_loss = cfg.lambda_coord * (cx_loss + cy_loss + w_sqrt_loss + h_sqrt_loss)
 
         # Objectness Loss
         # ==> ious: Objectness Label
