@@ -24,12 +24,10 @@ from configs import cfg, ProjectPath
 
 FLAGS = flags.FLAGS
 flags.DEFINE_integer('epochs', default=cfg.epochs, help='Number of training epochs')
+flags.DEFINE_float('init_lr', default=cfg.init_lr, help='Initial learning rate')
 flags.DEFINE_integer('batch_size', default=cfg.batch_size, help='Batch size')
-flags.DEFINE_integer('tb_img_max_outputs', default=cfg.tb_img_max_outputs, help='Number of visualized prediction images in tensorboard')
 flags.DEFINE_integer('val_step', default=cfg.val_step, help='Validation interval during training')
-flags.DEFINE_float('init_lr', default=cfg.learning_rate, help='Initial learning rate')
-flags.DEFINE_float('lr_decay_rate', default=0.5, help='Decay rate of learning rate')
-flags.DEFINE_integer('lr_decay_steps', default=15000, help='Learning rate decay steps')
+flags.DEFINE_integer('tb_img_max_outputs', default=cfg.tb_img_max_outputs, help='Number of visualized prediction images in tensorboard')
 flags.DEFINE_integer('val_sample_num', default=0, help='Validation sampling. 0 means use all validation set')
 # flags.mark_flag_as_required('')
 
@@ -75,12 +73,12 @@ def main(argv):
     backbone_xception = get_xception_backbone(cfg=cfg, freeze=False)
     yolo = YOLO(backbone=backbone_xception, cfg=cfg)
 
+    # Page 4. We continue training with 1e-2 for 75 epochs, then 1e-3 for 30 epochs, and finally 1e-4 for 30 epochs.
     # Optimizer
-    lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
-        initial_learning_rate=FLAGS.init_lr,
-        decay_steps=FLAGS.lr_decay_steps,
-        decay_rate=FLAGS.lr_decay_rate,
-        staircase=True,
+    train_steps_per_epoch = len(voc2012.get_train_ds())
+    lr_schedule = tf.keras.optimizers.schedules.PiecewiseConstantDecay(
+        boundaries=[train_steps_per_epoch * 75, train_steps_per_epoch * 30],
+        values=[FLAGS.init_lr, 1e-3, 1e-4],
     )
     optimizer = tf.optimizers.Adam(learning_rate=lr_schedule)
 

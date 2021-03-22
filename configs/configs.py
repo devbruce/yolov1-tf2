@@ -3,28 +3,28 @@ __all__ = ['Configs']
 
 class Configs:
     def __init__(self):
-        self.num_classes = 20
-        self.cell_size = 7
-        self.boxes_per_cell = 2
-        self.input_width = 448
-        self.input_height = 448
+        self.num_classes = 20      # Number of Classes (Default: PascalVOC2012 Dataset --> 20)
+        self.cell_size = 7         # Paper Default: 7
+        self.boxes_per_cell = 2    # Paper Default: 2
+        self.input_width = 448     # Paper Default: 448
+        self.input_height = 448    # Paper Default: 448
         self.eps = 1e-6
 
-        # Loss Coefficient (Lambda coefficients of paper)
-        self.lambda_coord = 1     # Paper Default: 5
-        self.lambda_noobj = 0.5   # Paper Default: 0.5
+        # Loss coefficients (Lambda coefficients of paper)
+        self.lambda_coord = 5      # Paper Default: 5
+        self.lambda_noobj = 0.5    # Paper Default: 0.5
 
-        # Loss Coefficient (Custom lambda coefficients. It is not mentioned in the paper)
-        self.lambda_obj = 1       # Paper Default: 1
-        self.lambda_class = 1     # Paper Default: 1
+        # Custom lambda coefficients. (It is not mentioned in the paper)
+        self.lambda_obj = 1        # Paper Default: 1
+        self.lambda_class = 1      # Paper Default: 1
 
         # Train
-        self.epochs = 200
+        self.epochs = 135          # Paper total epoch: 75 (lr: 1e-2) + 30 (lr: 1e-3) + 30 (lr: 1e-4)
+        self.init_lr = 1e-2        # Paper initial learning rate: 1e-2
         self.batch_size = 32
-        self.learning_rate = 1e-3
         self.val_step = 1
-        self.tb_img_max_outputs= 6
+        self.tb_img_max_outputs = 6
         
-        # Box filtering
+        # Box postprocess parameters
         self.nms_iou_thr = 0.5
-        self.conf_thr = 0.7
+        self.conf_thr = 0.5
