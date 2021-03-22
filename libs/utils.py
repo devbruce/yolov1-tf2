@@ -136,6 +136,6 @@ def viz_pred(img, labels, cls_map):
         *pts, confidence, cls_idx = label
         left, top, right, bottom = map(round, pts)
         cls_name = cls_map[int(cls_idx)]
-        cv2.rectangle(img, (left, top), (right, bottom), (0, 0, 255), 1)
+        cv2.rectangle(img, (left, top), (right, bottom), (255, 255, 0), 1)
         cv2.putText(img, f'{cls_name} {confidence:.2f}', (left, top), fontFace=cv2.FONT_HERSHEY_DUPLEX, fontScale=0.5, color=(255, 0, 0))
     return img
