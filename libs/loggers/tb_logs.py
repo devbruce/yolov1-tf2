@@ -8,11 +8,11 @@ __all__ = ['tb_write_losses', 'tb_write_lr', 'tb_write_APs', 'tb_write_imgs', 't
 
 def tb_write_losses(tb_writer, losses, step):
     with tb_writer.as_default():
-        tf.summary.scalar('total_loss', losses['total_loss'], step=step)
-        tf.summary.scalar('coord_loss', losses['coord_loss'], step=step)
-        tf.summary.scalar('obj_loss', losses['obj_loss'], step=step)
-        tf.summary.scalar('noobj_loss', losses['noobj_loss'], step=step)
-        tf.summary.scalar('class_loss', losses['class_loss'], step=step)
+        tf.summary.scalar('losses/total_loss', losses['total_loss'], step=step)
+        tf.summary.scalar('losses/coord_loss', losses['coord_loss'], step=step)
+        tf.summary.scalar('losses/obj_loss', losses['obj_loss'], step=step)
+        tf.summary.scalar('losses/noobj_loss', losses['noobj_loss'], step=step)
+        tf.summary.scalar('losses/class_loss', losses['class_loss'], step=step)
 
 
 def tb_write_lr(tb_writer, lr, step):
@@ -24,9 +24,9 @@ def tb_write_APs(tb_writer, APs, step, prefix='[Val] '):
     APs = APs.copy()
     mAP = APs.pop('mAP')
     with tb_writer.as_default():
-        tf.summary.scalar(prefix + 'mAP', mAP, step=step)
+        tf.summary.scalar(prefix + 'APs/mAP', mAP, step=step)
         for cls_name, ap in APs.items():
-            tf.summary.scalar(prefix + f'{cls_name} AP', ap, step=step)
+            tf.summary.scalar(prefix + 'APs/' + f'{cls_name}', ap, step=step)
             
 
 def tb_write_imgs(tb_writer, name, imgs, step, max_outputs):
