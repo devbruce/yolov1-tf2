@@ -3,7 +3,7 @@
 ![tf-v2.4.1](https://img.shields.io/badge/TensorFlow-v2.4.1-orange)
 
 For ease of implementation, i have not implemented exactly the same as paper.  
-(Such as backbone network, hyper paramters and etc ...)
+(Such as backbone network, learning rate scheduler, hyper paramters and etc ...)
 
 <br>
 
