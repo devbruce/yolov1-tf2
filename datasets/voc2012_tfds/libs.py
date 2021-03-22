@@ -72,7 +72,7 @@ def prep_voc_data(batch_data, input_height, input_width):
         h_rel = (y_max_rel - y_min_rel)
         
         label_preps = np.array([cx_rel, cy_rel, w_rel, h_rel, cls_idx], dtype=np.float32).T
-        label_preps = label_preps[np.where(np.all(label_preps[:, :4], axis=1) == True)]  # Filter dummy data by padded batch
+        label_preps = label_preps[np.where(np.any(label_preps[:, :4], axis=1) == True)]  # Filter dummy data by padded batch
         label_preps = tf.convert_to_tensor(label_preps, dtype=tf.float32)
         batch_labels.append(label_preps)
         

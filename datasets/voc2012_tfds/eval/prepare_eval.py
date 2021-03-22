@@ -1,5 +1,9 @@
+import os
+import tqdm
+import pickle
 import numpy as np
 from datasets.voc2012_tfds.libs import prep_voc_data
+from configs import ProjectPath
 
 
 __all__ = ['get_gts_all']
@@ -36,4 +40,10 @@ def get_gts_all(ds, input_height, input_width, cls_map):
             gts_all.extend(converted_data)
             img_id += 1
     print('\n====== ====== Get gts for mAP Calculation (Completed) ======\n')
+
+    # Save as pickle file
+    voc2012_val_gts_all_path = os.path.join(ProjectPath.DATASETS_DIR.value, 'voc2012_tfds', 'eval', 'val_gts_all_448.pickle')
+    with open(voc2012_val_gts_all_path, 'wb') as f:
+        pickle.dump(gts_all, f)
+    
     return gts_all
