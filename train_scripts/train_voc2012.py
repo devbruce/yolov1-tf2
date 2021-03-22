@@ -65,7 +65,7 @@ def main(argv):
         input_height=cfg.input_height,
         input_width=cfg.input_width,
         tb_writer=tb_val_writer,
-        name='Validation GT',
+        name='[Val] GT',
         max_outputs=FLAGS.tb_img_max_outputs,
     )
 
@@ -73,12 +73,12 @@ def main(argv):
     backbone_xception = get_xception_backbone(cfg=cfg, freeze=False)
     yolo = YOLO(backbone=backbone_xception, cfg=cfg)
 
-    # Page 4. We continue training with 1e-2 for 75 epochs, then 1e-3 for 30 epochs, and finally 1e-4 for 30 epochs.
+    # Paper Page 4. We continue training with 1e-2 for 75 epochs, then 1e-3 for 30 epochs, and finally 1e-4 for 30 epochs.
     # Optimizer
     train_steps_per_epoch = len(voc2012.get_train_ds())
     lr_schedule = tf.keras.optimizers.schedules.PiecewiseConstantDecay(
         boundaries=[train_steps_per_epoch * 75, train_steps_per_epoch * 30],
-        values=[FLAGS.init_lr, 1e-3, 1e-4],
+        values=[FLAGS.init_lr, 1e-4, 1e-5],
     )
     optimizer = tf.optimizers.Adam(learning_rate=lr_schedule)
 
@@ -208,7 +208,7 @@ def validation(epoch):
         pred_viz_imgs[idx] = viz_pred(img=img, labels=labels, cls_map=VOC_CLS_MAP)
     tb_write_imgs(
         tb_val_writer,
-        name=f'Validation Prediction (confidence_thr: {cfg.conf_thr}, nms_iou_thr: {cfg.nms_iou_thr})',
+        name=f'[Val] Prediction (confidence_thr: {cfg.conf_thr}, nms_iou_thr: {cfg.nms_iou_thr})',
         imgs=pred_viz_imgs,
         step=epoch,
         max_outputs=FLAGS.tb_img_max_outputs,
