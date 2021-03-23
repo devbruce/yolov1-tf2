@@ -9,7 +9,7 @@ from configs import ProjectPath
 __all__ = ['get_gts_all']
 
 
-def get_gts_all(ds, input_height, input_width, cls_map):
+def get_gts_all(ds, input_height, input_width, cls_map, full_save=False):
     gts_all = list()
     img_id = 0
     
@@ -42,8 +42,9 @@ def get_gts_all(ds, input_height, input_width, cls_map):
     print('\n====== ====== Get gts for mAP Calculation (Completed) ======\n')
 
     # Save as pickle file
-    voc2012_val_gts_all_path = os.path.join(ProjectPath.DATASETS_DIR.value, 'voc2012_tfds', 'eval', 'val_gts_all_448.pickle')
-    with open(voc2012_val_gts_all_path, 'wb') as f:
-        pickle.dump(gts_all, f)
+    if full_save:
+        voc2012_val_gts_all_path = os.path.join(ProjectPath.DATASETS_DIR.value, 'voc2012_tfds', 'eval', f'val_gts_all_448_full.pickle')
+        with open(voc2012_val_gts_all_path, 'wb') as f:
+            pickle.dump(gts_all, f)
     
     return gts_all

@@ -22,6 +22,8 @@ from datasets.voc2012_tfds.eval.prepare_eval import get_gts_all
 from configs import cfg, ProjectPath
 
 
+# Recommend to use default val_sample_num.
+#   --> Sampled data has an side effect on mAP calculation. Because sampled data doesn't always have all 20 classes.
 FLAGS = flags.FLAGS
 flags.DEFINE_integer('epochs', default=cfg.epochs, help='Number of training epochs')
 flags.DEFINE_float('init_lr', default=cfg.init_lr, help='Initial learning rate')
@@ -30,6 +32,7 @@ flags.DEFINE_integer('val_step', default=cfg.val_step, help='Validation interval
 flags.DEFINE_integer('tb_img_max_outputs', default=cfg.tb_img_max_outputs, help='Number of visualized prediction images in tensorboard')
 flags.DEFINE_integer('val_sample_num', default=0, help='Validation sampling. 0 means use all validation set')
 # flags.mark_flag_as_required('')
+
 
 # Save some gpu errors
 physical_devices = tf.config.list_physical_devices('GPU')
@@ -44,11 +47,14 @@ def main(argv):
 
     # Dataset (PascalVOC2012)
     voc2012 = GetVoc2012(batch_size=FLAGS.batch_size)
-    voc2012_val_gts_all_path = os.path.join(ProjectPath.DATASETS_DIR.value, 'voc2012_tfds', 'eval', 'val_gts_all_448.pickle')
-    if os.path.exists(voc2012_val_gts_all_path):
-        voc2012_val_gts_all = pickle.load(open(voc2012_val_gts_all_path, 'rb'))
+    voc2012_val_gts_all_path = os.path.join(ProjectPath.DATASETS_DIR.value, 'voc2012_tfds', 'eval', 'val_gts_all_448_full.pickle')
+    if FLAGS.val_sample_num == 0:
+        if os.path.exists(voc2012_val_gts_all_path):
+            voc2012_val_gts_all = pickle.load(open(voc2012_val_gts_all_path, 'rb'))
+        else:
+            voc2012_val_gts_all = get_gts_all(voc2012.get_val_ds(), cfg.input_height, cfg.input_width, VOC_CLS_MAP, full_save=True)
     else:
-        voc2012_val_gts_all = get_gts_all(voc2012.get_val_ds(), cfg.input_height, cfg.input_width, VOC_CLS_MAP)
+        voc2012_val_gts_all = get_gts_all(voc2012.get_val_ds().take(FLAGS.val_sample_num), cfg.input_height, cfg.input_width, VOC_CLS_MAP)
         
     # Logger
     logger = get_logger()
