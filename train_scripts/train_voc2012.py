@@ -41,7 +41,7 @@ tf.config.experimental.set_memory_growth(device=physical_devices[0], enable=True
 
 def main(argv):
     global voc2012, voc2012_val_gts_all
-    global logger, tb_train_writer, tb_val_writer, val_viz_batch_data
+    global logger, tb_train_writer, tb_val_writer, train_viz_batch_data, val_viz_batch_data
     global yolo, optimizer
     global VOC2012_PB_PATH, ckpt, ckpt_manager
 
@@ -63,15 +63,24 @@ def main(argv):
     # Tensorboard
     tb_train_writer = tf.summary.create_file_writer(ProjectPath.TB_LOGS_TRAIN_DIR.value)
     tb_val_writer = tf.summary.create_file_writer(ProjectPath.TB_LOGS_VAL_DIR.value)
+    train_viz_batch_data = next(iter(voc2012.get_train_ds(shuffle=False, drop_remainder=False).take(1)))
     val_viz_batch_data = next(iter(voc2012.get_val_ds().take(1)))
-
-    # Tensorboard Visualization (Validation GT)
+    
+    # Prediction Visualization (Tensorboard)
     tb_write_sampled_voc_gt_imgs(
         batch_data=val_viz_batch_data,
         input_height=cfg.input_height,
         input_width=cfg.input_width,
         tb_writer=tb_val_writer,
         name='[Val] GT',
+        max_outputs=FLAGS.tb_img_max_outputs,
+    )
+    tb_write_sampled_voc_gt_imgs(
+        batch_data=train_viz_batch_data,
+        input_height=cfg.input_height,
+        input_width=cfg.input_width,
+        tb_writer=tb_train_writer,
+        name='[Train] GT',
         max_outputs=FLAGS.tb_img_max_outputs,
     )
 
@@ -87,7 +96,7 @@ def main(argv):
         values=[FLAGS.init_lr, 1e-4, 1e-5],
     )
     optimizer = tf.optimizers.Adam(learning_rate=lr_schedule)
-    
+
     # Checkpoint
     VOC2012_PB_PATH = os.path.join(ProjectPath.VOC2012_CKPTS_DIR.value, f'yolo_epoch_{FLAGS.epochs}.pb')
     ckpt = tf.train.Checkpoint(step=tf.Variable(0), model=yolo)
@@ -202,7 +211,26 @@ def validation(epoch):
 
     val_log_handler.logging(epoch=epoch, losses=val_losses, APs=APs, tb_writer=tb_val_writer)
 
-    # ====== Tensorboard Image: prediction output visualization ======
+    # ========= Tensorboard Image: prediction output visualization =========
+    # Training data output visualization
+    sampled_voc_imgs, _ = prep_voc_data(train_viz_batch_data, input_height=cfg.input_height, input_width=cfg.input_width)
+    sampled_voc_preds = yolo(sampled_voc_imgs)
+    sampled_voc_output_boxes = yolo_output2boxes(sampled_voc_preds, cfg.input_height, cfg.input_width, cfg.cell_size, cfg.boxes_per_cell)
+    sampled_imgs_num = FLAGS.tb_img_max_outputs if len(sampled_voc_imgs) > FLAGS.tb_img_max_outputs else len(sampled_voc_imgs)
+    pred_viz_imgs = np.empty([sampled_imgs_num, cfg.input_height, cfg.input_width, 3], dtype=np.uint8)
+    for idx in range(sampled_imgs_num):
+        img = sampled_voc_imgs[idx].numpy()
+        labels = box_postp2use(pred_boxes=sampled_voc_output_boxes[idx], nms_iou_thr=cfg.nms_iou_thr, conf_thr=cfg.conf_thr)
+        pred_viz_imgs[idx] = viz_pred(img=img, labels=labels, cls_map=VOC_CLS_MAP)
+    tb_write_imgs(
+        tb_train_writer,
+        name=f'[Train] Prediction (confidence_thr: {cfg.conf_thr}, nms_iou_thr: {cfg.nms_iou_thr})',
+        imgs=pred_viz_imgs,
+        step=epoch,
+        max_outputs=FLAGS.tb_img_max_outputs,
+    )
+
+    # Validation data output visualization
     sampled_voc_imgs, _ = prep_voc_data(val_viz_batch_data, input_height=cfg.input_height, input_width=cfg.input_width)
     sampled_voc_preds = yolo(sampled_voc_imgs)
     sampled_voc_output_boxes = yolo_output2boxes(sampled_voc_preds, cfg.input_height, cfg.input_width, cfg.cell_size, cfg.boxes_per_cell)
@@ -219,6 +247,7 @@ def validation(epoch):
         step=epoch,
         max_outputs=FLAGS.tb_img_max_outputs,
     )
+    # ========= ================================================ =========
 
     # Save Checkpoint
     if APs['mAP'] >= mAP_prev:
