@@ -88,11 +88,11 @@ def main(argv):
     backbone_xception = get_xception_backbone(cfg=cfg, freeze=False)
     yolo = YOLO(backbone=backbone_xception, cfg=cfg)
 
-    # Optimizer (Default: 1e-3 for 105 epochs, 1e-4 for 30 epochs, 1e-5 for 30 epochs)
+    # Optimizer (Default: 1e-3 for 85 epochs, 1e-4 for 30 epochs, 1e-5 for 30 epochs)
     # Paper Page 4. We continue training with 1e-2 for 75 epochs, then 1e-3 for 30 epochs, and finally 1e-4 for 30 epochs.
     train_steps_per_epoch = len(voc2012.get_train_ds())
     lr_schedule = tf.keras.optimizers.schedules.PiecewiseConstantDecay(
-        boundaries=[train_steps_per_epoch * 105, train_steps_per_epoch * 30],
+        boundaries=[train_steps_per_epoch * 85, train_steps_per_epoch * 30],
         values=[FLAGS.init_lr, 1e-4, 1e-5],
     )
     optimizer = tf.optimizers.Adam(learning_rate=lr_schedule)
