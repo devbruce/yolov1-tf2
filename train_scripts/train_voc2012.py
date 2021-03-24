@@ -22,8 +22,6 @@ from datasets.voc2012_tfds.eval.prepare_eval import get_gts_all
 from configs import cfg, ProjectPath
 
 
-# Recommend to use default val_sample_num.
-#   --> Sampled data has an side effect on mAP calculation. Because sampled data doesn't always have all 20 classes.
 FLAGS = flags.FLAGS
 flags.DEFINE_integer('epochs', default=cfg.epochs, help='Number of training epochs')
 flags.DEFINE_float('init_lr', default=cfg.init_lr, help='Initial learning rate')
@@ -40,7 +38,7 @@ tf.config.experimental.set_memory_growth(device=physical_devices[0], enable=True
     
 
 def main(argv):
-    global voc2012, voc2012_val_gts_all
+    global voc2012, voc2012_val_gts_all, cls_name_list
     global logger, tb_train_writer, tb_val_writer, train_viz_batch_data, val_viz_batch_data
     global yolo, optimizer
     global VOC2012_PB_PATH, ckpt, ckpt_manager
@@ -51,10 +49,11 @@ def main(argv):
     if FLAGS.val_sample_num == 0:
         if os.path.exists(voc2012_val_gts_all_path):
             voc2012_val_gts_all = pickle.load(open(voc2012_val_gts_all_path, 'rb'))
+            cls_name_list = list(VOC_CLS_MAP.values())
         else:
-            voc2012_val_gts_all = get_gts_all(voc2012.get_val_ds(), cfg.input_height, cfg.input_width, VOC_CLS_MAP, full_save=True)
+            voc2012_val_gts_all, cls_name_list = get_gts_all(voc2012.get_val_ds(), cfg.input_height, cfg.input_width, VOC_CLS_MAP, full_save=True)
     else:
-        voc2012_val_gts_all = get_gts_all(voc2012.get_val_ds().take(FLAGS.val_sample_num), cfg.input_height, cfg.input_width, VOC_CLS_MAP)
+        voc2012_val_gts_all, cls_name_list = get_gts_all(voc2012.get_val_ds().take(FLAGS.val_sample_num), cfg.input_height, cfg.input_width, VOC_CLS_MAP)
         
     # Logger
     logger = get_logger()
@@ -202,8 +201,8 @@ def validation(epoch):
                 cls_name = VOC_CLS_MAP[cls_idx]
                 val_preds_all.append([cls_name, conf, *map(round, pts), img_id])
             img_id += 1
-
-    APs = get_ap(preds_all=val_preds_all, gts_all=voc2012_val_gts_all, classes=list(VOC_CLS_MAP.values()), iou_thr=0.5)
+    
+    APs = get_ap(preds_all=val_preds_all, gts_all=voc2012_val_gts_all, classes=cls_name_list, iou_thr=0.5)
     val_losses = dict()
     for loss_name in val_losses_raw:
         val_losses[loss_name] = val_losses_raw[loss_name].result().numpy()

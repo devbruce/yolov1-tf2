@@ -64,7 +64,7 @@ If the option is given, the default config value is overridden.
 - `--batch_size`
 - `--val_step`: Validation interval during training
 - `--tb_img_max_outputs `: Number of visualized prediction images in tensorboard
-- `--val_sample_num`: Validation sampling. 0 means use all validation set (Recommend to use default 0)
+- `--val_sample_num`: Validation sampling. 0 means use all validation set.
 
 <br><br>
 

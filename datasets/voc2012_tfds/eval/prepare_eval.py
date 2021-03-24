@@ -11,6 +11,7 @@ __all__ = ['get_gts_all']
 
 def get_gts_all(ds, input_height, input_width, cls_map, full_save=False):
     gts_all = list()
+    cls_name_list = list()
     img_id = 0
     
     def cls_idx2name(data_list):
@@ -38,6 +39,11 @@ def get_gts_all(ds, input_height, input_width, cls_map, full_save=False):
             converted_data = np.around(converted_data).astype(np.int32).tolist()
             cls_idx2name(converted_data)
             gts_all.extend(converted_data)
+
+            for i in cls_idx:
+                cls_name = cls_map[i]
+                if cls_name not in cls_name_list:
+                    cls_name_list.append(cls_name)
             img_id += 1
     print('\n====== ====== Get gts for mAP Calculation (Completed) ======\n')
 
@@ -47,4 +53,4 @@ def get_gts_all(ds, input_height, input_width, cls_map, full_save=False):
         with open(voc2012_val_gts_all_path, 'wb') as f:
             pickle.dump(gts_all, f)
     
-    return gts_all
+    return gts_all, cls_name_list
