@@ -3,7 +3,7 @@ import numpy as np
 import tensorflow as tf
 
 
-__all__ = ['VOC_CLS_MAP', 'normalize_img', 'trim_img_zero_pad', 'prep_voc_data']
+__all__ = ['VOC_CLS_MAP', 'trim_img_zero_pad', 'prep_voc_data']
 
 
 VOC_CLS_MAP = {
@@ -28,15 +28,6 @@ VOC_CLS_MAP = {
     18: 'train',
     19: 'tvmonitor',
 }
-
-
-def normalize_img(data):
-    imgs_normalized = tf.cast(data['image'], dtype=tf.float32) / 255.0
-    ret = {
-        'imgs': imgs_normalized,
-        'labels': data['objects']
-    }
-    return ret
 
 
 def trim_img_zero_pad(arr):
