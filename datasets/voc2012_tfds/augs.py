@@ -1,7 +1,7 @@
 import tensorflow as tf
 
 
-__all__ = ['normalize_img', 'flip_lr']
+__all__ = ['normalize_img', 'flip_lr', 'color_augs']
 
 
 def normalize_img(data):
@@ -23,4 +23,15 @@ def flip_lr(data):
     
     data['imgs'] = img_lr_flipped
     data['labels']['bbox'] = pts_lr_flipped
+    return data
+
+
+def color_augs(data):
+    imgs = data['imgs']
+    imgs = tf.image.random_hue(imgs, 0.08)
+    imgs = tf.image.random_saturation(imgs, 0.8, 1.2)
+    imgs = tf.image.random_brightness(imgs, 0.2)
+    imgs = tf.image.random_contrast(imgs, 0.8, 1.2)
+    imgs = tf.clip_by_value(imgs, 0., 1.)
+    data['imgs'] = imgs
     return data

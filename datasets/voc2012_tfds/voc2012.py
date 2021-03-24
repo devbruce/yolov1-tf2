@@ -1,6 +1,6 @@
 import tensorflow as tf
 import tensorflow_datasets as tfds
-from .augs import normalize_img, flip_lr
+from .augs import normalize_img, flip_lr, color_augs
 
 
 __all__ = ['GetVoc2012']
@@ -17,6 +17,7 @@ class GetVoc2012:
         train_ds = train_ds[0]
         train_ds = train_ds.map(normalize_img, num_parallel_calls=self.autotune)
         train_ds = train_ds.map(flip_lr, num_parallel_calls=self.autotune)
+        train_ds = train_ds.map(color_augs, num_parallel_calls=self.autotune)
         train_ds = train_ds.cache()  # Loaded data first time, it's going to keep track of some of them in memory. It makes faster
         if shuffle:
             train_ds = train_ds.shuffle(ds_info.splits['train'].num_examples)
