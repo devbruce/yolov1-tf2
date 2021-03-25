@@ -11,7 +11,7 @@ def get_losses(one_pred, one_label, cfg):
     """
     Args:
       one_pred (EagerTensor dtype=tf.float32): 3-D Tensor shape=[cell_size, cell_size, boxes_per_cell*5 + num_classes]
-      one_label (EagerTensor dtype=tf.float32): 2-D Tensor shape=[obj_n, 5], 5 --> [x_center_in_cell, y_center_in_cell, width, height, class_index] (Absolute coordinates)
+      one_label (EagerTensor dtype=tf.float32): 2-D Tensor shape=[obj_n, 5], 5 --> [cx_rel_in_cell, cy_rel_in_cell, w_rel, h_rel, cls_idx]
       cfg: YOLO config object
 
     Returns:
@@ -23,12 +23,12 @@ def get_losses(one_pred, one_label, cfg):
     pred_confidences = pred_boxes_with_confidence[:, :, :, 4]
     pred_cell_classes = one_pred[:, :, cfg.boxes_per_cell*5:]
     
-    pred_cx_in_cell = pred_boxes[:, :, :, 0]
-    pred_cy_in_cell = pred_boxes[:, :, :, 1]
-    pred_w_sqrt = pred_boxes[:, :, :, 2]
-    pred_h_sqrt = pred_boxes[:, :, :, 3]
-    cell_w = cfg.input_width // cfg.cell_size
-    cell_h = cfg.input_height // cfg.cell_size
+    pred_cx_rel_in_cell = pred_boxes[:, :, :, 0]
+    pred_cy_rel_in_cell = pred_boxes[:, :, :, 1]
+    pred_w_rel = pred_boxes[:, :, :, 2]
+    pred_h_rel = pred_boxes[:, :, :, 3]
+    pred_w_rel_sqrt = tf.square(pred_w_rel)
+    pred_h_rel_sqrt = tf.square(pred_h_rel)
 
     # Loop the number of objects
     losses = {
@@ -44,15 +44,16 @@ def get_losses(one_pred, one_label, cfg):
 
         # Label Info
         cls_idx = tf.cast(label[4], tf.int32)
-        cx, cy, w, h = label[0], label[1], label[2], label[3]
-        cx = tf.minimum(cx, cfg.input_width - cfg.eps)
-        cy = tf.minimum(cy, cfg.input_height - cfg.eps)
-        cx_in_cell = cx / cfg.cell_size
-        cy_in_cell = cy / cfg.cell_size
-        w_sqrt, h_sqrt = tf.sqrt(w), tf.sqrt(h)
+        cx_rel, cy_rel, w_rel, h_rel = label[0], label[1], label[2], label[3]
+        cx_rel = tf.minimum(cx_rel, 1. - cfg.eps)
+        cy_rel = tf.minimum(cy_rel, 1. - cfg.eps)
+        x_grid_idx = int(cx_rel * cfg.cell_size)
+        y_grid_idx = int(cy_rel * cfg.cell_size)
 
-        y_grid_idx = int(cy // cell_h)  # Tensor to Int
-        x_grid_idx = int(cx // cell_w)
+        cx_rel_in_cell = (cx_rel * cfg.cell_size) - x_grid_idx
+        cy_rel_in_cell = (cy_rel * cfg.cell_size) - y_grid_idx
+        w_rel_sqrt = tf.square(w_rel)
+        h_rel_sqrt = tf.square(h_rel)
         
         # Responsible cell mask
         # ==> If the center of an object falls into a grid cell, that grid cell is responsible for detecting that object
@@ -61,8 +62,8 @@ def get_losses(one_pred, one_label, cfg):
         responsible_cell_mask[y_grid_idx, x_grid_idx] = 1
         
         # Resonsible box mask (Max IoU per cell)
-        pred_ltrb = postprocess_yolo_format(pred_boxes_with_confidence, cfg.input_height, cfg.input_width, cfg.cell_size, cfg.boxes_per_cell)
-        ious = calc_iou(pred_ltrb, label[:-1], cfg)
+        pred_ltrb_abs = postprocess_yolo_format(pred_boxes_with_confidence, cfg.input_height, cfg.input_width, cfg.cell_size, cfg.boxes_per_cell)
+        ious = calc_iou(pred_ltrb_abs, label[:-1], cfg)
 
         max_ious = tf.reduce_max(ious, axis=2, keepdims=True)  # shape = [cell_size, cell_size, 1]
         resonsible_box_mask = tf.cast(tf.greater_equal(ious, max_ious), tf.float32)  # shape = [cell_size, cell_size, boxes_per_cell]
@@ -71,10 +72,10 @@ def get_losses(one_pred, one_label, cfg):
         responsible_mask = responsible_cell_mask * resonsible_box_mask
 
         # Coordinate Loss
-        cx_loss = tf.reduce_sum(tf.square(responsible_mask * (pred_cx_in_cell - cx_in_cell)))
-        cy_loss = tf.reduce_sum(tf.square(responsible_mask * (pred_cy_in_cell - cy_in_cell)))
-        w_sqrt_loss = tf.reduce_sum(tf.square(responsible_mask * (pred_w_sqrt - w_sqrt)))
-        h_sqrt_loss = tf.reduce_sum(tf.square(responsible_mask * (pred_h_sqrt - h_sqrt)))
+        cx_loss = tf.reduce_sum(tf.square(responsible_mask * (pred_cx_rel_in_cell - cx_rel_in_cell)))
+        cy_loss = tf.reduce_sum(tf.square(responsible_mask * (pred_cy_rel_in_cell - cy_rel_in_cell)))
+        w_sqrt_loss = tf.reduce_sum(tf.square(responsible_mask * (pred_w_rel_sqrt - w_rel_sqrt)))
+        h_sqrt_loss = tf.reduce_sum(tf.square(responsible_mask * (pred_h_rel_sqrt - h_rel_sqrt)))
         coord_loss = cfg.lambda_coord * (cx_loss + cy_loss + w_sqrt_loss + h_sqrt_loss)
 
         # Objectness Loss
