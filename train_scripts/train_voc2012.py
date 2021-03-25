@@ -192,7 +192,7 @@ def validation(epoch):
         # ====== ====== ====== mAP ====== ====== ======
         yolo_boxes = yolo_output2boxes(yolo_output_raw, cfg.input_height, cfg.input_width, cfg.cell_size, cfg.boxes_per_cell)
         for i in range(len(yolo_boxes)):
-            output_boxes = box_postp2use(yolo_boxes[i], cfg.nms_iou_thr, cfg.conf_thr)
+            output_boxes = box_postp2use(yolo_boxes[i], cfg.nms_iou_thr, 0.)
             if output_boxes.size == 0:
                 img_id += 1
                 continue

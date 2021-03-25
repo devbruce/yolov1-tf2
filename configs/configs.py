@@ -27,4 +27,4 @@ class Configs:
         
         # Box postprocess parameters
         self.nms_iou_thr = 0.5
-        self.conf_thr = 0.5
+        self.conf_thr = 0.7  # Used visualization
