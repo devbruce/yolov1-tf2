@@ -22,7 +22,7 @@ def get_gts_all(ds, input_height, input_width, cls_map, full_save=False):
             
     print('\n====== ====== Get gts for mAP Calculation ====== ======\n')
     for step, batch_data in tqdm.tqdm(enumerate(ds, 1), total=len(ds), desc='Get gts for mAP Calculation'):
-        batch_imgs, batch_labels = prep_voc_data(batch_data, input_height=input_height, input_width=input_width)
+        _, batch_labels = prep_voc_data(batch_data, input_height=input_height, input_width=input_width)
         for batch_label in batch_labels:
             batch_label = batch_label.numpy()
             img_id_arr = np.array([img_id] * len(batch_label), dtype=np.float32)
