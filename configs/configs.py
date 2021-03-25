@@ -19,8 +19,8 @@ class Configs:
         self.lambda_class = 1      # Paper Default: 1
 
         # Train
-        self.epochs = 145          # Paper Default: 135 (75 (lr: 1e-2) + 30 (lr: 1e-3) + 30 (lr: 1e-4))
-        self.init_lr = 1e-3        # Paper Default: 1e-2
+        self.epochs = 135          # Paper Default: 135 (75 (lr: 1e-2) + 30 (lr: 1e-3) + 30 (lr: 1e-4))
+        self.init_lr = 1e-4        # Paper Default: 1e-2
         self.batch_size = 32
         self.val_step = 1
         self.tb_img_max_outputs = 6
