@@ -8,7 +8,7 @@ class YOLO(tf.keras.Model):
     def __init__(self, backbone, cfg):
         super().__init__()
         x = tf.keras.layers.GlobalAveragePooling2D()(backbone.output)
-        x = tf.keras.layers.Dense(cfg.cell_size * cfg.cell_size * ((cfg.boxes_per_cell * 5) + cfg.num_classes), activation=None)(x)
+        x = tf.keras.layers.Dense(cfg.cell_size * cfg.cell_size * ((cfg.boxes_per_cell * 5) + cfg.num_classes), activation='sigmoid')(x)
         output = tf.reshape(x, [-1, cfg.cell_size, cfg.cell_size, (cfg.boxes_per_cell * 5) + cfg.num_classes])
         self.model = tf.keras.Model(inputs=backbone.input, outputs=output)
 
