@@ -111,7 +111,9 @@ If you want to inference with this pb file, infer to [inference_tutorial.ipynb](
 
 <br>
 
-### Performance (Evaluation with VOC2007 test)
+### Performance
+
+#### Evaluation with VOC2007 test
 
 | class name  | AP         |
 |-------------|------------|
@@ -136,6 +138,13 @@ If you want to inference with this pb file, infer to [inference_tutorial.ipynb](
 | bird        | 0.4824     |
 | cow         | 0.4548     |
 | **mAP**     | **0.5032** |
+
+<br>
+
+#### Inference Speed
+
+- GPU: About 8 FPS
+- CPU: About 4 FPS
 
 <br><br>
 
