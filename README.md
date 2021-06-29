@@ -143,8 +143,8 @@ If you want to inference with this pb file, infer to [inference_tutorial.ipynb](
 
 #### Inference Speed
 
-- GPU: About 8 FPS
-- CPU: About 4 FPS
+- GPU(GeForce RTX 3090): About 8 FPS
+- CPU(AMD Ryzen 5 5600X 6-Core Processor): About 4 FPS
 
 <br><br>
 
