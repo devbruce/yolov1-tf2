@@ -5,15 +5,15 @@
 For ease of implementation, i have not implemented exactly the same as paper.  
 The things presented below are implemented differently from the paper.
 
-- Backbone network. (Used **Xception** instead of network mentioned in the paper.)
+- Backbone network(Used **Xception** instead of network mentioned in the paper.)
 
-- Learning rate schedule (Used `tf.keras.optimizers.schedules.ExponentialDecay`)
+- Learning rate schedule(Used `tf.keras.optimizers.schedules.ExponentialDecay`)
 
 - Data augmentations
 
 - Hyper parameters
 
-- And so on . . .
+- And so on ...
 
 <br><br>
 
@@ -68,13 +68,15 @@ The things presented below are implemented differently from the paper.
 ### Build Docker Image
 
 ```bash
-$ docker build -t ${NAME}:${TAG} .
+docker build -t ${ImageName}:${ImageTag} .
 ```
 
 ### Create a Container
 
+- Example
+
 ```bash
-$ docker run -d -it --gpus all --shm-size=${PROPER_VALUE} ${NAME}:${TAG} /bin/bash
+docker run -d -it --gpus all --shm-size=${ShmSize} ${ImageName}:${ImageTag} /bin/bash
 ```
 
 <br><br>
@@ -104,7 +106,7 @@ Trained with default values of this repo. (Total Epoch: 105)
 pb file is uploaded as `tar.gz`. So, you have to decompress this file like below.
 
 ```bash
-$ tar -zxvf yolo_voc_448x448.tar.gz
+tar -zxvf yolo_voc_448x448.tar.gz
 ```
 
 If you want to inference with this pb file, infer to [inference_tutorial.ipynb](./inference_tutorial.ipynb)
@@ -153,7 +155,7 @@ If you want to inference with this pb file, infer to [inference_tutorial.ipynb](
 > Path: [./voc_scripts/train_voc.py](./voc_scripts/train_voc.py)
 
 ```bash
-$ python train_voc.py
+python train_voc.py
 ```
 
 **Options**  
@@ -180,7 +182,7 @@ If the options are given, the default config values are overridden.
 Evaluation pretrained model with VOC2007 Test Dataset
 
 ```bash
-$ python eval_voc.py
+python eval_voc.py
 ```
 
 **Options**  
